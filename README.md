@@ -13,14 +13,14 @@ _______
 
 1) Start the service:
 
-$<INSTALL_DIR>/restful_path_lister $ docker run -d -it -p 8080:8080 --volume=<LOCAL_VOLUME>:/mnt/localfs/  restful_path_lister
+$<INSTALL_DIR> $ docker run -d -it -p 8080:8080 --volume=<LOCAL_VOLUME>:/mnt/localfs/  restful_path_lister
 
 NOTE: make sure to set the <LOCAL_VOLUME> field to your local system folder of preference.
 E.g
-$<INSTALL_DIR>/restful_path_lister $ docker run -d -it -p 8080:8080 --volume=/home/:/mnt/localfs/  restful_path_lister
+$<INSTALL_DIR> $ docker run -d -it -p 8080:8080 --volume=/:/mnt/localfs/  restful_path_lister
 
 2) Enter test url:
-http://localhost:8080/listdir?path=/usr/
+http://localhost:8080/listdir?path=/home/
 
 
 
