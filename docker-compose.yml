@@ -1,0 +1,17 @@
+version: "2"
+services:
+    java_rest:
+        build:
+            context: ./build
+            dockerfile: ./java-rest-dockerfile
+        ports:
+            - "8080:8080"
+        volumes:
+            - /:/mnt/localfs/
+
+#    volumes:
+#     - ./Processing/OCIMS/:/Processing/OCIMS/
+#     - ./scripts/:/scripts/
+
+
+
