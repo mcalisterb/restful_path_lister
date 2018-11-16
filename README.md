@@ -1,11 +1,12 @@
-# restful_path_lister
-RESTful path lister
+#RESTful path lister
 
 ______________
 INSTALLATION:
 ______________
 
-$<INSTALL_DIR>/restful_path_lister $ docker build -t restful_path_lister build/
+Docker build:
+
+$<INSTALL_DIR> $ docker build -t restful_path_lister build/
 
 _______
 TO RUN:
