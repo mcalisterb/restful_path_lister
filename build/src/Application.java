@@ -8,12 +8,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.*;
+import java.nio.file.FileVisitOption;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.FileVisitResult;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.EnumSet;
+import java.lang.StringBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,53 +41,46 @@ public class Application {
     }
 
     @RequestMapping(value="listdir", method = RequestMethod.GET)
-    public @ResponseBody List<Map<String,String>> listDir(@RequestParam("path") String path){
-        List<Map<String,String>> filesMapList = new ArrayList<Map<String,String>>();
+    public @ResponseBody char [][] listDir(@RequestParam("path") String path){
+        List<Map<String,String>> filesMapList = new ArrayList<Map<String,String>>();     
+        int MAX_SIZE = 1000000;
+        char [][] filesArr = new char[MAX_SIZE][];
         try {
             String fullPath = "/mnt/localfs/" + path;
             System.out.println("Searching " + fullPath);
-            Stream<Path> paths = Files.find(Paths.get(fullPath),
-                                            Integer.MAX_VALUE,
-                                            (filePath, fileAttr) -> fileAttr.isRegularFile());
-            List<Path> list = paths.map(path_ -> Files.isDirectory(path_) ? path_: path_)
-                                     .collect(Collectors.toList());
+            Files.walkFileTree(Paths.get(fullPath), EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
+                public int i = 0;
+                public StringBuilder sb;
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    try {
+                        if (i < MAX_SIZE){
 
-           
-            for (Path pth: list){
-                try {                    
-                    BasicFileAttributes attrs = Files.readAttributes(pth, BasicFileAttributes.class);
-                    HashMap<String, String> filemap = new HashMap<>();
-                    filemap.put("Path", pth.toString().replace("/mnt/localfs",""));
-                    filemap.put("Size",Long.toString(attrs.size()));
-                    filemap.put("Creation time",attrs.creationTime().toString());
-                    filemap.put("Last access time", attrs.lastAccessTime().toString());
-                    filemap.put("Last modified time", attrs.lastModifiedTime().toString());
-                    filesMapList.add(filemap);
-
+                            sb = new StringBuilder("");
+                            sb.append("[Path: ").append(file.toString().replace("/mnt/localfs","")).append(",")
+                            .append("Size: ").append(Long.toString(attrs.size())).append(",")
+                            .append("Creation time: ").append(attrs.creationTime().toString()).append(",")
+                            .append("Last access time: ").append(attrs.lastAccessTime().toString()).append(",")
+                            .append("Last modified time: ").append(attrs.lastModifiedTime().toString()).append("]");
+                            filesArr[i] = sb.toString().toCharArray();//s.toCharArray();
+                            //System.out.println(i);
+                        }
+                        i++;
+                    } catch (Exception e) {
+                        System.out.println("Invalid file " + file.toString());
+                    }                      
+                    return FileVisitResult.CONTINUE;
                 }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-            
-        }
-        catch (UncheckedIOException e){
-            System.out.println ("Access denied!");
-            HashMap<String, String> errorMap = new HashMap<>();
-            errorMap.put("Error","Access denied to a file in the specified path listing."
-                         + "Please make sure to only provide paths with full read permissions.");
-            filesMapList.add(errorMap);
-            e.printStackTrace();
+            }); 
         }
         catch (Exception e){
             System.out.println ("Error occurred!");
-            HashMap<String, String> errorMap = new HashMap<>();
-            errorMap.put("Error","Please make sure to provide a path which exists.");
-            filesMapList.add(errorMap);
             e.printStackTrace();
+            char [][] errArr = new char[1][];
+            errArr[0] = "Error! Please make sure to provide a path which exists.".toCharArray();            
+            return errArr;            
         }
-        System.out.println(filesMapList.size());
-        return filesMapList;
+        return filesArr;
         
     }
 
